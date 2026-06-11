@@ -1,6 +1,6 @@
 #!/bin/bash
 
 echo "#!/bin/bash
-      conda run -n patty python $(pwd)/main.py \$@" > patty
+      conda run --no-capture-output -n patty python $(pwd)/main.py \"\$@\"" > patty
 
 chmod +x ./patty

@@ -1,4 +1,9 @@
 import traceback
+import sys
+from contextlib import redirect_stderr, redirect_stdout
+from datetime import datetime
+from pathlib import Path
+from typing import TextIO
 
 from src.pddl.Domain import Domain, GroundedDomain
 from src.pddl.Plan import Plan
@@ -12,10 +17,48 @@ from src.utils.LogPrint import LogPrint, LogPrintLevel
 from src.utils.TimeStat import TimeStat
 
 
+class TeeOutput:
+    def __init__(self, terminal: TextIO, output_file: TextIO):
+        self.terminal = terminal
+        self.output_file = output_file
+
+    def write(self, message: str):
+        self.terminal.write(message)
+        self.output_file.write(message)
+
+    def flush(self):
+        self.terminal.flush()
+        self.output_file.flush()
+
+
 def main():
     args = Arguments()
     if args.isHelp:
         exit(0)
+
+    if args.saveOutput:
+        output_path = get_output_path(args)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open("w", encoding="utf-8") as fout:
+            tee_out = TeeOutput(terminal=sys.stdout, output_file=fout)
+            tee_err = TeeOutput(terminal=sys.stderr, output_file=fout)
+            with redirect_stdout(tee_out), redirect_stderr(tee_err):
+                run(args)
+        return
+
+    run(args)
+
+
+def get_output_path(args: Arguments) -> Path:
+    if args.saveOutput != "RESULTS":
+        return Path(args.saveOutput)
+
+    problem_path = Path(args.problem)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return Path("results") / f"{problem_path.stem}_{timestamp}.out"
+
+
+def run(args: Arguments):
 
     solver: Search or None = None
     try:

@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """
-随机生成 bottles 域的 problem.pddl。
+生成 bottles 域的 problem.pddl。
 
 用法示例：
-    python generate_problem.py --num-bottles 5 --total-litres 20 \
+    python generate_bottle.py --num-bottles 5 --total-litres 20 \
         --output problem_random.pddl
 """
 
@@ -29,11 +29,27 @@ def random_partition(total: int, n: int) :
     return parts
 
 
+def balanced_partition(total: int, n: int, shuffle: bool = True):
+    """把 total 尽量均匀地拆成 n 份非负整数，和为 total。"""
+    if n <= 0:
+        raise ValueError("n must be > 0")
+    base = total // n
+    remainder = total % n
+    parts = [base] * n
+    indices = list(range(n))
+    if shuffle:
+        random.shuffle(indices)
+    for idx in indices[:remainder]:
+        parts[idx] += 1
+    return parts
+
+
 def generate_problem(num_bottles: int,
                      total_litres: int,
                      problem_name: str = "random-bottles",
                      output_path: str = "problem.pddl",
-                     seed: int =None) -> None:
+                     seed: int = None,
+                     mode: str = "hard") -> None:
     if num_bottles <= 0:
         raise ValueError("num_bottles 必须 > 0")
     if total_litres < 0:
@@ -52,28 +68,39 @@ def generate_problem(num_bottles: int,
     left_bottles = bottles[:half]
     right_bottles = bottles[half:] if half < num_bottles else bottles
 
-    # 随机生成各瓶初始 litres，和为 total_litres
-    # 额外要求：尽量让每个 left_bottle 初始至少有 1 升水（在总量足够的前提下）
+    # 生成各瓶初始 litres，和为 total_litres。
+    # hard:
+    #   把水尽量均匀放在 left_bottles，right_bottles 初始为 0。
+    #   目标把 left 的水全部转移到 right，因此最少 pour 次数 = total_litres。
+    # random:
+    #   保留旧逻辑：总水量随机分布到所有瓶子，再随机决定每个 left 倒出多少。
     litres_per_bottle = [0] * num_bottles
     n_left = len(left_bottles)
 
-    if total_litres >= n_left:
-        # 先保证每个 left 至少有 1 升
-        for i in range(n_left):
-            litres_per_bottle[i] = 1
+    if mode == "hard":
+        left_amounts = balanced_partition(total_litres, n_left)
+        for i, amount in enumerate(left_amounts):
+            litres_per_bottle[i] = amount
+    elif mode == "random":
+        if total_litres >= n_left:
+            # 先保证每个 left 至少有 1 升
+            for i in range(n_left):
+                litres_per_bottle[i] = 1
 
-        remaining = total_litres - n_left
-        if remaining > 0:
-            # 把剩余部分随机分配给所有瓶子
-            extra = random_partition(remaining, num_bottles)
-            for i in range(num_bottles):
-                litres_per_bottle[i] += extra[i]
+            remaining = total_litres - n_left
+            if remaining > 0:
+                # 把剩余部分随机分配给所有瓶子
+                extra = random_partition(remaining, num_bottles)
+                for i in range(num_bottles):
+                    litres_per_bottle[i] += extra[i]
+        else:
+            # 总量不足以让所有 left 都 >=1：尽量多地给 left 分配 1 升
+            # 只在 left_bottles 中选 total_litres 个位置，每个加 1（如果 total_litres < n_left）
+            indices = random.sample(range(n_left), total_litres)
+            for idx in indices:
+                litres_per_bottle[idx] += 1
     else:
-        # 总量不足以让所有 left 都 >=1：尽量多地给 left 分配 1 升
-        # 只在 left_bottles 中选 total_litres 个位置，每个加 1（如果 total_litres < n_left）
-        indices = random.sample(range(n_left), total_litres)
-        for idx in indices:
-            litres_per_bottle[idx] += 1
+        raise ValueError(f"未知 mode: {mode}")
 
     # 生成 (:objects) 区块
     objects_lines = []
@@ -92,53 +119,44 @@ def generate_problem(num_bottles: int,
         init_lines.append(f"    (= (litres {b}) {v})")
     init_block = "\n".join(init_lines)
 
-    # -------- 生成 (:goal) 区块 --------
-    # 目标：在满足
-    #   1) left_bottles 液体量不增加
-    #   2) right_bottles 液体量不减少
-    #   3) init 和 goal 的总液体量不变
-    # 的前提下，让“液体量发生变化的瓶子数量尽可能多”。
-    #
-    # 做法：
-    #   - 对每个 left 瓶子，若初始量 > 0，则至少倒出 1 单位（保证变化）；
-    #   - 把所有 left 倒出的总量 T，尽量均匀地分配给 right 瓶子：
-    #       * 如果 T >= |right|：先每个 right 至少加 1，剩余部分再随机分配；
-    #       * 如果 T <  |right|：随机选 T 个 right，每个加 1；
-    #   - 这样大部分 left 会减少，大部分 right 会增加。
-
     # 初始体积按瓶子名建表
     init_map = {b: v for b, v in zip(bottles, litres_per_bottle)}
 
-    # left 侧倒出量
-    left_transfers = []
-    for b in left_bottles:
-        v = init_map[b]
-        if v <= 0:
-            t = 0
-        else:
-            # 至少倒出 1 单位，最多倒出全部
-            t = random.randint(1, v)
-        left_transfers.append(t)
-    total_transfer = sum(left_transfers)
+    if mode == "hard":
+        left_transfers = [init_map[b] for b in left_bottles]
+        total_transfer = sum(left_transfers)
+        right_extras = balanced_partition(total_transfer, len(right_bottles))
+    else:
+        # left 侧倒出量
+        left_transfers = []
+        for b in left_bottles:
+            v = init_map[b]
+            if v <= 0:
+                t = 0
+            else:
+                # 至少倒出 1 单位，最多倒出全部
+                t = random.randint(1, v)
+            left_transfers.append(t)
+        total_transfer = sum(left_transfers)
 
-    # right 侧接收量
-    right_extras = [0] * len(right_bottles)
-    if right_bottles and total_transfer > 0:
-        m = len(right_bottles)
-        if total_transfer >= m:
-            # 先保证每个 right 至少 +1
-            base = [1] * m
-            remaining = total_transfer - m
-            extra = [0] * m
-            for _ in range(remaining):
-                idx = random.randrange(m)
-                extra[idx] += 1
-            right_extras = [b + e for b, e in zip(base, extra)]
-        else:
-            # total_transfer < m：随机选择 total_transfer 个 right，每个加 1
-            indices = random.sample(range(m), total_transfer)
-            for idx in indices:
-                right_extras[idx] += 1
+        # right 侧接收量
+        right_extras = [0] * len(right_bottles)
+        if right_bottles and total_transfer > 0:
+            m = len(right_bottles)
+            if total_transfer >= m:
+                # 先保证每个 right 至少 +1
+                base = [1] * m
+                remaining = total_transfer - m
+                extra = [0] * m
+                for _ in range(remaining):
+                    idx = random.randrange(m)
+                    extra[idx] += 1
+                right_extras = [b + e for b, e in zip(base, extra)]
+            else:
+                # total_transfer < m：随机选择 total_transfer 个 right，每个加 1
+                indices = random.sample(range(m), total_transfer)
+                for idx in indices:
+                    right_extras[idx] += 1
 
     # 计算 goal 中每个瓶子的 litres
     goal_map = {}
@@ -181,6 +199,7 @@ def generate_problem(num_bottles: int,
     out_path = Path(output_path)
     out_path.write_text(problem_pddl, encoding="utf-8")
     print(f"problem 写入: {out_path.resolve()}")
+    print(f"mode: {mode}, total_transfer: {total_transfer}, expected_min_pours: {total_transfer}")
 
 
 def main():
@@ -195,6 +214,8 @@ def main():
                         help="随机种子（可选，便于复现）")
     parser.add_argument("--name", type=str, default="random-bottles",
                         help="problem 名字（PDDL 中的名字）")
+    parser.add_argument("--mode", choices=["hard", "random"], default="hard",
+                        help="生成模式：hard 均匀分配并强制全部从 left 转到 right；random 使用旧随机逻辑")
 
     args = parser.parse_args()
     generate_problem(
@@ -203,6 +224,7 @@ def main():
         problem_name=args.name,
         output_path=args.output,
         seed=args.seed,
+        mode=args.mode,
     )
 
 

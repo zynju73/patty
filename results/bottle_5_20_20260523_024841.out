@@ -1,0 +1,60 @@
+line 2:44 extraneous input ':durative-action' expecting {':', ')'}
+Started Grounding
+Static Grounding Stats:
+|V_b|=5
+|V_n|=5
+|A|=33
+|Asgn(A)|=0
+Dynamic Grounding Stats:
+|V_b|=5
+|V_n|=5
+|A|=22
+|Asgn(A)|=0
+Ended Grounding: 6
+Started Conversion to SMT at bound 1
+((('time_pour b1 b4_at_start' <= 'time_pour b1 b5_at_start') & ('time_pour b1 b5_at_start' < ('time_pour b1 b4_at_start' + 'dur_pour b1 b4_at_start'))) -> ((ToReal('pour b1 b4_at_start') <= 1.0) & (ToReal('pour b1 b5_at_start') <= 1.0)))
+((('time_pour b1 b4_at_start' <= 'time_uncap-cap b1_at_end') & ('time_uncap-cap b1_at_end' < ('time_pour b1 b4_at_start' + 'dur_pour b1 b4_at_start'))) -> ((ToReal('pour b1 b4_at_start') <= 1.0) & (ToReal('uncap-cap b1_at_end') <= 1.0)))
+((('time_pour b1 b4_at_start' <= 'time_uncap-cap b4_at_end') & ('time_uncap-cap b4_at_end' < ('time_pour b1 b4_at_start' + 'dur_pour b1 b4_at_start'))) -> ((ToReal('pour b1 b4_at_start') <= 1.0) & (ToReal('uncap-cap b4_at_end') <= 1.0)))
+((('time_pour b2 b4_at_start' <= 'time_pour b2 b5_at_start') & ('time_pour b2 b5_at_start' < ('time_pour b2 b4_at_start' + 'dur_pour b2 b4_at_start'))) -> ((ToReal('pour b2 b4_at_start') <= 1.0) & (ToReal('pour b2 b5_at_start') <= 1.0)))
+((('time_pour b2 b4_at_start' <= 'time_uncap-cap b2_at_end') & ('time_uncap-cap b2_at_end' < ('time_pour b2 b4_at_start' + 'dur_pour b2 b4_at_start'))) -> ((ToReal('pour b2 b4_at_start') <= 1.0) & (ToReal('uncap-cap b2_at_end') <= 1.0)))
+((('time_pour b2 b4_at_start' <= 'time_uncap-cap b4_at_end') & ('time_uncap-cap b4_at_end' < ('time_pour b2 b4_at_start' + 'dur_pour b2 b4_at_start'))) -> ((ToReal('pour b2 b4_at_start') <= 1.0) & (ToReal('uncap-cap b4_at_end') <= 1.0)))
+((('time_pour b1 b5_at_start' <= 'time_uncap-cap b1_at_end') & ('time_uncap-cap b1_at_end' < ('time_pour b1 b5_at_start' + 'dur_pour b1 b5_at_start'))) -> ((ToReal('pour b1 b5_at_start') <= 1.0) & (ToReal('uncap-cap b1_at_end') <= 1.0)))
+((('time_pour b1 b5_at_start' <= 'time_uncap-cap b5_at_end') & ('time_uncap-cap b5_at_end' < ('time_pour b1 b5_at_start' + 'dur_pour b1 b5_at_start'))) -> ((ToReal('pour b1 b5_at_start') <= 1.0) & (ToReal('uncap-cap b5_at_end') <= 1.0)))
+((('time_pour b2 b5_at_start' <= 'time_uncap-cap b2_at_end') & ('time_uncap-cap b2_at_end' < ('time_pour b2 b5_at_start' + 'dur_pour b2 b5_at_start'))) -> ((ToReal('pour b2 b5_at_start') <= 1.0) & (ToReal('uncap-cap b2_at_end') <= 1.0)))
+((('time_pour b2 b5_at_start' <= 'time_uncap-cap b5_at_end') & ('time_uncap-cap b5_at_end' < ('time_pour b2 b5_at_start' + 'dur_pour b2 b5_at_start'))) -> ((ToReal('pour b2 b5_at_start') <= 1.0) & (ToReal('uncap-cap b5_at_end') <= 1.0)))
+((('time_pour b2 b3_at_start' <= 'time_pour b2 b4_at_start') & ('time_pour b2 b4_at_start' < ('time_pour b2 b3_at_start' + 'dur_pour b2 b3_at_start'))) -> ((ToReal('pour b2 b3_at_start') <= 1.0) & (ToReal('pour b2 b4_at_start') <= 1.0)))
+((('time_pour b2 b3_at_start' <= 'time_pour b2 b5_at_start') & ('time_pour b2 b5_at_start' < ('time_pour b2 b3_at_start' + 'dur_pour b2 b3_at_start'))) -> ((ToReal('pour b2 b3_at_start') <= 1.0) & (ToReal('pour b2 b5_at_start') <= 1.0)))
+((('time_pour b2 b3_at_start' <= 'time_uncap-cap b2_at_end') & ('time_uncap-cap b2_at_end' < ('time_pour b2 b3_at_start' + 'dur_pour b2 b3_at_start'))) -> ((ToReal('pour b2 b3_at_start') <= 1.0) & (ToReal('uncap-cap b2_at_end') <= 1.0)))
+((('time_pour b2 b3_at_start' <= 'time_uncap-cap b3_at_end') & ('time_uncap-cap b3_at_end' < ('time_pour b2 b3_at_start' + 'dur_pour b2 b3_at_start'))) -> ((ToReal('pour b2 b3_at_start') <= 1.0) & (ToReal('uncap-cap b3_at_end') <= 1.0)))
+((('time_pour b1 b3_at_start' <= 'time_pour b1 b4_at_start') & ('time_pour b1 b4_at_start' < ('time_pour b1 b3_at_start' + 'dur_pour b1 b3_at_start'))) -> ((ToReal('pour b1 b3_at_start') <= 1.0) & (ToReal('pour b1 b4_at_start') <= 1.0)))
+((('time_pour b1 b3_at_start' <= 'time_pour b1 b5_at_start') & ('time_pour b1 b5_at_start' < ('time_pour b1 b3_at_start' + 'dur_pour b1 b3_at_start'))) -> ((ToReal('pour b1 b3_at_start') <= 1.0) & (ToReal('pour b1 b5_at_start') <= 1.0)))
+((('time_pour b1 b3_at_start' <= 'time_uncap-cap b1_at_end') & ('time_uncap-cap b1_at_end' < ('time_pour b1 b3_at_start' + 'dur_pour b1 b3_at_start'))) -> ((ToReal('pour b1 b3_at_start') <= 1.0) & (ToReal('uncap-cap b1_at_end') <= 1.0)))
+((('time_pour b1 b3_at_start' <= 'time_uncap-cap b3_at_end') & ('time_uncap-cap b3_at_end' < ('time_pour b1 b3_at_start' + 'dur_pour b1 b3_at_start'))) -> ((ToReal('pour b1 b3_at_start') <= 1.0) & (ToReal('uncap-cap b3_at_end') <= 1.0)))
+Ended Conversion to SMT at bound 1: 12
+Bound 1 - Vars = 70
+Bound 1 - Rules = 203
+Bound 1 - Avg Rule Length = 3.55
+Bound 1 - Pattern Length = 22
+Calls to Solver: 0
+Started Solving Bound 1
+Ended Solving Bound 1: 31
+Bound: 1
+(0.001:uncap-cap b1) [5.0]
+(0.001:uncap-cap b2) [5.0]
+(0.001:uncap-cap b3) [5.0]
+(0.001:uncap-cap b4) [5.0]
+(0.001:uncap-cap b5) [5.0]
+(0.002:pour b1 b3) [1.0]
+(0.002:pour b2 b3) [1.0]
+(0.003:pour b1 b4) [1.0]
+(1.003:pour b1 b5) [1.0]
+(2.003:pour b1 b5) [1.0]
+
+------
+Max Rolling: 0
+Distinct Actions: 9
+------
+Plan is valid
+Grounding: 6ms
+Overall: 74ms
+

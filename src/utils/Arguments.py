@@ -28,6 +28,10 @@ class Arguments:
                             type=int)
         parser.add_argument('--save-smt', help="Where to save the smt rules")
         parser.add_argument('--save-plan', help="Where to save the plan", nargs='?', const="PROBLEM")
+        parser.add_argument('--save-output', nargs='?', const="RESULTS", default="RESULTS",
+                            help="Where to save the terminal output. Defaults to results/<problem>_<timestamp>.out")
+        parser.add_argument('--no-save-output', action="store_true",
+                            help="Do not save terminal output")
         parser.add_argument('--effect-axioms',
                             help="If the encoding has effect axioms for each action (quadratic, RanTanPlan's Like)",
                             action="store_true", default=False)
@@ -44,6 +48,9 @@ class Arguments:
                             action="store_true", default=False)
         parser.add_argument('--temporal-constraints', help="'numerical' or 'logical' following IJCAI-24",
                             default='numerical')
+        parser.add_argument('--manual-bottle-constraints',
+                            choices=["support", "resource", "all"],
+                            help="Add hardcoded bottle constraints before solving")
 
         args = parser.parse_args()
         self.isHelp = "help" in args
@@ -61,6 +68,7 @@ class Arguments:
         self.encoding = args.encoding
         self.saveSMT = args.save_smt
         self.savePlan = args.save_plan
+        self.saveOutput = None if args.no_save_output else args.save_output
         self.binaryActions = int(args.binary_actions)
         self.hasEffectAxioms = args.effect_axioms
         self.rollBound = args.roll_bound
@@ -69,3 +77,4 @@ class Arguments:
         self.useSCCs = args.use_sccs
         self.noCompression = args.no_compression
         self.temporalConstraints = args.temporal_constraints
+        self.manualBottleConstraints = args.manual_bottle_constraints

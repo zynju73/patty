@@ -34,7 +34,8 @@ class TemporalEncoding(Encoding):
 
     def __init__(self, domain: GroundedDomain, problem: Problem, pattern: Pattern, bound: int, epsilon=0.001,
                  constraints: str = "numerical", relaxGoal=False,
-                 subgoalsAchieved: Set[Formula] = None):
+                 subgoalsAchieved: Set[Formula] = None,
+                 manualBottleConstraints: str = None):
 
         super().__init__(domain, problem, pattern, bound)
         self.domain = domain
@@ -45,6 +46,7 @@ class TemporalEncoding(Encoding):
         self.constraints = constraints
         self.relaxGoal = relaxGoal
         self.subgoalsAchieved = subgoalsAchieved
+        self.manualBottleConstraints = manualBottleConstraints
 
         self.transitionVariables: [TemporalTransitionVariables] = list()
 
@@ -522,8 +524,99 @@ class TemporalEncoding(Encoding):
             for j in B_i:
                 t_j = stepVars.timeVariables[j]
                 d_j = stepVars.durVariables[j] if j in stepVars.durVariables else 0.0
-                rhsList.append(t_i >= t_j + d_j)
+                epsilon_b = self.getEpsilonB(action_i.durativeAction) if isinstance(action_i, SnapAction) \
+                    and action_i.timeType == TimePredicateType.AT_START else 0.0
+                rhsList.append(t_i >= t_j + d_j + epsilon_b)
             rules.append(lhs.implies(SMTExpression.andOfExpressionsList(rhsList)))
+
+        return rules
+
+    def getManualBottleConstraintModes(self) -> Set[str]:
+        if not self.manualBottleConstraints:
+            return set()
+        if self.manualBottleConstraints == "all":
+            return {"support", "resource"}
+        return {self.manualBottleConstraints}
+
+    def collectBottleCounts(self, stepVars: TemporalTransitionVariables):
+        pourCounts: Dict[Tuple[str, str], List[SMTExpression]] = {}
+        uncapCounts: Dict[str, List[SMTExpression]] = {}
+
+        for i, action in enumerate(self.pattern):
+            if action.isFake or not isinstance(action, SnapAction) or action.timeType != TimePredicateType.AT_START:
+                continue
+
+            parts = action.durativeAction.name.split()
+            if len(parts) == 2 and parts[0] == "uncap-cap":
+                uncapCounts.setdefault(parts[1], []).append(stepVars.actionVariables[i])
+            elif len(parts) == 3 and parts[0] == "pour":
+                pourCounts.setdefault((parts[1], parts[2]), []).append(stepVars.actionVariables[i])
+
+        return pourCounts, uncapCounts
+
+    @staticmethod
+    def sumCounts(counts: List[SMTExpression]):
+        return sum(counts) if counts else 0
+
+    @staticmethod
+    def countPositive(counts: List[SMTExpression]) -> SMTExpression:
+        return (sum(counts) > 0) if counts else SMTExpression.FALSE()
+
+    def getInitialCappedBottles(self) -> Set[str]:
+        capped = set()
+        for assignment in self.problem.init:
+            if isinstance(assignment, Literal) and assignment.sign == "+":
+                atom = assignment.getAtom()
+                if atom.name == "capped" and atom.attributes:
+                    capped.add(atom.attributes[0])
+        return capped
+
+    def getInitialLitres(self) -> Dict[str, float]:
+        initialLitres: Dict[str, float] = {}
+        for assignment in self.problem.init:
+            if not isinstance(assignment, BinaryPredicate):
+                continue
+            atom = assignment.getAtom()
+            if atom.name == "litres" and atom.attributes and isinstance(assignment.rhs, Constant):
+                initialLitres[atom.attributes[0]] = float(assignment.rhs.value)
+        return initialLitres
+
+    @staticmethod
+    def bottleIndex(name: str) -> int:
+        return int(name[1:]) if name.startswith("b") and name[1:].isdigit() else 0
+
+    def getManualBottleRules(self, stepVars: TemporalTransitionVariables) -> List[SMTExpression]:
+        modes = self.getManualBottleConstraintModes()
+        if not modes or self.problem.domainName != "bottles":
+            return []
+
+        pourCounts, uncapCounts = self.collectBottleCounts(stepVars)
+        rules: List[SMTExpression] = []
+
+        if "support" in modes:
+            initiallyCapped = self.getInitialCappedBottles()
+            for (src, dst), counts in pourCounts.items():
+                antecedent = self.countPositive(counts)
+                supportRules = []
+                if src in initiallyCapped:
+                    supportRules.append(self.countPositive(uncapCounts.get(src, [])))
+                if dst in initiallyCapped:
+                    supportRules.append(self.countPositive(uncapCounts.get(dst, [])))
+                if supportRules:
+                    rules.append(antecedent.implies(SMTExpression.andOfExpressionsList(supportRules)))
+
+        if "resource" in modes:
+            initialLitres = self.getInitialLitres()
+            sources = sorted({src for src, _ in pourCounts}, key=self.bottleIndex)
+            for src in sources:
+                if src not in initialLitres:
+                    continue
+                outgoing = []
+                for (pourSrc, _), counts in pourCounts.items():
+                    if pourSrc == src:
+                        outgoing.extend(counts)
+                if outgoing:
+                    rules.append(self.sumCounts(outgoing) <= initialLitres[src])
 
         return rules
 
@@ -612,7 +705,6 @@ class TemporalEncoding(Encoding):
                         if action_j.couldBeRepeated() or action_i.couldBeRepeated():
                             rhs = (a_i <= 1).AND(a_j <= 1)
                             rules.append(interval.implies(rhs))
-                            print(interval.implies(rhs))
 
         return rules
 
@@ -627,6 +719,7 @@ class TemporalEncoding(Encoding):
         rulesDict["eff"] = self.getEffStepRules(stepVars)
         rulesDict["amo"] = self.getAmoStepRules(stepVars)
         rulesDict["frame"] = self.getFrameStepRules(stepVars)
+        rulesDict["manual-bottle"] = self.getManualBottleRules(stepVars)
         # Pattern Time Encoding
         rulesDict["dur"] = self.getDurationRules(stepVars)
         if self.constraints == "logical":
@@ -688,8 +781,8 @@ class TemporalEncoding(Encoding):
         x.field_names = ["i", "Action", "a_i", "t_i", "d_i"]
         for i, action in enumerate(self.pattern):
             a_i = int(str(solution.getVariable(stepVar.actionVariables[i])))
-            t_i = round(solution.getVariable(stepVar.timeVariables[i]), 3)
-            d_i = round(solution.getVariable(stepVar.durVariables[i]), 3) if i in stepVar.durVariables else 0.0
+            t_i = solution.getVariable(stepVar.timeVariables[i])
+            d_i = solution.getVariable(stepVar.durVariables[i]) if i in stepVar.durVariables else 0.0
 
             x.add_row([i, action, a_i, t_i, d_i])
         # print(x)
@@ -699,7 +792,7 @@ class TemporalEncoding(Encoding):
         for i, action in enumerate(self.pattern):
 
             a_i = int(str(solution.getVariable(stepVar.actionVariables[i])))
-            t_i = round(solution.getVariable(stepVar.timeVariables[i]), 3)
+            t_i = solution.getVariable(stepVar.timeVariables[i])
 
             if a_i == 0:
                 continue
@@ -728,9 +821,9 @@ class TemporalEncoding(Encoding):
             b = start.durativeAction
             a_i = int(str(solution.getVariable(stepVar.actionVariables[i])))
             a_j = int(str(solution.getVariable(stepVar.actionVariables[j])))
-            t_i = round(solution.getVariable(stepVar.timeVariables[i]), 3)
-            t_j = round(solution.getVariable(stepVar.timeVariables[j]), 3)
-            d_i = round(solution.getVariable(stepVar.durVariables[i]), 3)
+            t_i = solution.getVariable(stepVar.timeVariables[i])
+            t_j = solution.getVariable(stepVar.timeVariables[j])
+            d_i = solution.getVariable(stepVar.durVariables[i])
             e_b = self.getEpsilonB(b)
 
             if a_i != a_j:
@@ -740,7 +833,7 @@ class TemporalEncoding(Encoding):
             #     raise Exception(
             #         f"Action {b} has wrong timings t_j: {t_j}, t_i: {t_i}, d_i = {d_i} -> {t_j} != {t_i} + {d_i}")
 
-            d = round(((d_i + e_b) / a_i) - e_b, 3)
+            d = ((d_i + e_b) / a_i) - e_b
 
             if isinstance(b.duration, Constant) and round(d, 3) != round(b.duration.value, 3):
                 raise Exception(
@@ -749,9 +842,9 @@ class TemporalEncoding(Encoding):
             plan.addUnrolledTimedAction(start, t_i)
             plan.addUnrolledTimedAction(end, t_j)
             for p in range(0, a_i):
-                t = round(t_i + p * (d + e_b), 3)
+                t = t_i + p * (d + e_b)
                 plan.addAction(b, t, d)
                 plan.addTimedAction(start, t)
-                plan.addTimedAction(end, round(t + d, 3))
+                plan.addTimedAction(end, t + d)
 
         return plan
