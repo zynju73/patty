@@ -16,6 +16,8 @@ class Arguments:
                             action="store_true")
         parser.add_argument('--pattern', default="arpg", help="Method too compute the pattern: arpg, random")
         parser.add_argument('--solver', default="z3", help="The solver used to compute a solution: yices, z3")
+        parser.add_argument('--seed', default=2026, type=int,
+                            help="Unified random seed for Python, NumPy, Z3, and the patty launcher")
         parser.add_argument('-s', '--search', default="static",
                             help="The search strategy used to compute the solution: static, gbfs, astar")
         parser.add_argument('--encoding', default="non-linear",
@@ -48,9 +50,12 @@ class Arguments:
                             action="store_true", default=False)
         parser.add_argument('--temporal-constraints', help="'numerical' or 'logical' following IJCAI-24",
                             default='numerical')
-        parser.add_argument('--manual-bottle-constraints',
-                            choices=["support", "resource", "all"],
-                            help="Add hardcoded bottle constraints before solving")
+        parser.add_argument('--additional-constraints', choices=["support", "resource", "all"],
+                            help="Generate domain-independent necessary constraints before solving")
+        parser.add_argument('--support-rule-grouping', choices=["precondition", "action"], default="action",
+                            help="Generate one support rule per precondition or per action")
+        parser.add_argument('--manual-bottle-constraints', choices=["support", "resource", "all"],
+                            help="Deprecated alias for --additional-constraints")
 
         args = parser.parse_args()
         self.isHelp = "help" in args
@@ -65,6 +70,7 @@ class Arguments:
         self.printARPG = args.arpg
         self.pattern = args.pattern
         self.solver = args.solver
+        self.seed = args.seed
         self.encoding = args.encoding
         self.saveSMT = args.save_smt
         self.savePlan = args.save_plan
@@ -77,4 +83,5 @@ class Arguments:
         self.useSCCs = args.use_sccs
         self.noCompression = args.no_compression
         self.temporalConstraints = args.temporal_constraints
-        self.manualBottleConstraints = args.manual_bottle_constraints
+        self.additionalConstraints = args.additional_constraints or args.manual_bottle_constraints
+        self.supportRuleGrouping = args.support_rule_grouping

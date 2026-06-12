@@ -1,6 +1,20 @@
 #!/bin/bash
 
-echo "#!/bin/bash
-      conda run --no-capture-output -n patty python $(pwd)/main.py \"\$@\"" > patty
+echo '#!/bin/bash
+seed=2026
+expect_seed=false
+for arg in "$@"; do
+    if $expect_seed; then
+        seed="$arg"
+        expect_seed=false
+    elif [ "$arg" = "--seed" ]; then
+        expect_seed=true
+    elif [[ "$arg" == --seed=* ]]; then
+        seed="${arg#--seed=}"
+    fi
+done
+
+export PYTHONHASHSEED="$seed"
+conda run --no-capture-output -n patty python '"$(pwd)"'/main.py "$@"' > patty
 
 chmod +x ./patty

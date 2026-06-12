@@ -11,7 +11,7 @@ from src.utils.Arguments import Arguments
 class TestAStarCountersLinear(TestCase):
 
     def setUp(self) -> None:
-        domainFile = "../../files/numeric/ipc-2023/fo_counters/domain.pddl"
+        domainFile = "../../files/numeric/ipc-2023/fo_counters/domain_bottle.pddl"
         problemFile = "../../files/numeric/ipc-2023/fo_counters/instances/instance_15.pddl"
 
         self.domain: Domain = Domain.fromFile(domainFile)

@@ -11,7 +11,7 @@ from src.utils.Arguments import Arguments
 class TestAStarMailRobots(TestCase):
 
     def setUp(self) -> None:
-        domainFile = "../../files/numeric/mailrobot/domain.pddl"
+        domainFile = "../../files/numeric/mailrobot/domain_bottle.pddl"
         problemFile = "../../files/numeric/mailrobot/instances-hand/problem.pddl"
 
         self.domain: Domain = Domain.fromFile(domainFile)

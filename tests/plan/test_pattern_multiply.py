@@ -12,7 +12,7 @@ from src.smt.SMTSolver import SMTSolver
 class TestPatternMultiply(TestCase):
 
     def setUp(self) -> None:
-        self.domain: Domain = Domain.fromFile("../../files/line-exchange/domain.pddl")
+        self.domain: Domain = Domain.fromFile("../../files/line-exchange/domain_bottle.pddl")
         self.problem: Problem = Problem.fromFile("../../files/line-exchange/instances/4_15_50_100.pddl")
         self.gDomain: GroundedDomain = self.domain.ground(self.problem)
         self.horizon = 4

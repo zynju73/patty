@@ -33,14 +33,14 @@ def getDomainName(task_filename):
 
     dirname, basename = os.path.split(task_filename)
     ## look for domain in folder or  folder up
-    domain_filename = os.path.join(dirname, "domain.pddl")
+    domain_filename = os.path.join(dirname, "domain_bottle.pddl")
     os.path.exists(domain_filename)
     if not os.path.exists(domain_filename):
-        domain_filename = os.path.join(dirname, "../domain.pddl")
+        domain_filename = os.path.join(dirname, "../domain_bottle.pddl")
     if not os.path.exists(domain_filename) and re.match(r"p[0-9][0-9]\b", basename):
-        domain_filename = os.path.join(dirname, basename[:4] + "domain.pddl")
+        domain_filename = os.path.join(dirname, basename[:4] + "domain_bottle.pddl")
     if not os.path.exists(domain_filename) and re.match(r"p[0-9][0-9]\b", basename):
-        domain_filename = os.path.join(dirname, basename[:3] + "-domain.pddl")
+        domain_filename = os.path.join(dirname, basename[:3] + "-domain_bottle.pddl")
     if not os.path.exists(domain_filename):
         raise SystemExit("Error: Could not find domain file using "
                          "automatic naming rules.")

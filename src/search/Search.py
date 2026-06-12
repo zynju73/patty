@@ -3,12 +3,14 @@ from src.pddl.Problem import Problem
 from src.plan.NumericEncoding import NumericEncoding
 from src.utils.Arguments import Arguments
 from src.utils.LogPrint import LogPrint, LogPrintLevel
+from src.utils.RandomSeed import configureRandomSeed
 from src.utils.TimeStat import TimeStat
 
 
 class Search:
 
     def __init__(self, domain: GroundedDomain, problem: Problem, args: Arguments):
+        configureRandomSeed(args.seed)
         self.domain = domain
         self.problem = problem
 

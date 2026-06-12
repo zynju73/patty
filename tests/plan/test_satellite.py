@@ -15,7 +15,7 @@ class TestSatellite(TestCase):
 
     def setUp(self) -> None:
         a = time.perf_counter()
-        self.domain: Domain = Domain.fromFile("../../files/satellite/domain.pddl")
+        self.domain: Domain = Domain.fromFile("../../files/satellite/domain_bottle.pddl")
         b = time.perf_counter()
         self.problem: Problem = Problem.fromFile("../../files/satellite/instances/pfile1.pddl")
         c = time.perf_counter()

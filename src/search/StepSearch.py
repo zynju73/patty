@@ -53,12 +53,14 @@ class StepSearch(Search):
                 encoding=self.args.encoding,
                 binaryActions=self.args.binaryActions,
                 rollBound=self.args.rollBound,
-                hasEffectAxioms=self.args.hasEffectAxioms
+                hasEffectAxioms=self.args.hasEffectAxioms,
+                additionalConstraints=self.args.additionalConstraints,
+                supportRuleGrouping=self.args.supportRuleGrouping
             )
             self.ts.end(f"Conversion to SMT at bound {bound}", console=self.console)
 
             self.ts.start(f"Solving Bound {bound}", console=self.console)
-            solver: SMTSolver = SMTSolver(pddl2smt, maximize=self.args.maximize)
+            solver: SMTSolver = SMTSolver(pddl2smt, maximize=self.args.maximize, seed=self.args.seed)
 
             plan: NumericPlan
             plan = solver.solve()
@@ -70,6 +72,10 @@ class StepSearch(Search):
             self.console.log(f"Bound {bound} - Rules = {pddl2smt.getNRules()}", LogPrintLevel.STATS)
             self.console.log(f"Bound {bound} - Avg Rule Length = {pddl2smt.getAvgRuleLength()}", LogPrintLevel.STATS)
             self.console.log(f"Bound {bound} - Pattern Length = {pattern.getLength()}", LogPrintLevel.STATS)
+            if self.args.additionalConstraints:
+                stats = pddl2smt.additionalConstraintStats
+                self.console.log(f"Additional Support Rules = {stats['support']}", LogPrintLevel.STATS)
+                self.console.log(f"Additional Resource Rules = {stats['resource']}", LogPrintLevel.STATS)
             self.console.log(f"Calls to Solver: {callsToSolver}", LogPrintLevel.STATS)
 
             if self.args.saveSMT:

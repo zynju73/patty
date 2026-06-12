@@ -48,12 +48,14 @@ class GBFSSearch(Search):
                 encoding=self.args.encoding,
                 binaryActions=self.args.binaryActions,
                 rollBound=self.args.rollBound,
-                hasEffectAxioms=self.args.hasEffectAxioms
+                hasEffectAxioms=self.args.hasEffectAxioms,
+                additionalConstraints=self.args.additionalConstraints,
+                supportRuleGrouping=self.args.supportRuleGrouping
             )
             self.ts.end(f"Conversion to SMT at bound {bound}", console=self.console)
 
             self.ts.start(f"Solving Bound {bound}", console=self.console)
-            solver: SMTSolver = SMTSolver(pddl2smt, maximize=self.maximize)
+            solver: SMTSolver = SMTSolver(pddl2smt, maximize=self.maximize, seed=self.args.seed)
             callsToSolver += 1
             plan: NumericPlan = solver.solve()
             solver.exit()

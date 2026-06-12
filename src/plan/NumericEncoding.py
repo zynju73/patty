@@ -9,6 +9,7 @@ from src.pddl.Formula import Formula
 from src.pddl.Literal import Literal
 from src.pddl.NumericPlan import NumericPlan
 from src.pddl.Problem import Problem
+from src.plan.AdditionalConstraints import AdditionalConstraintGenerator, PatternEffectIndex
 from src.plan.Encoding import Encoding
 from src.plan.NumericTransitionVariables import NumericTransitionVariables
 from src.plan.Pattern import Pattern
@@ -26,7 +27,8 @@ class NumericEncoding(Encoding):
 
     def __init__(self, domain: GroundedDomain, problem: Problem, pattern: Pattern, bound: int, encoding="non-linear",
                  binaryActions=10, rollBound=0, hasEffectAxioms=False, relaxGoal=False,
-                 subgoalsAchieved: Set[Formula] = None):
+                 subgoalsAchieved: Set[Formula] = None, additionalConstraints: str = None,
+                 supportRuleGrouping="action"):
 
         super().__init__(domain, problem, pattern, bound)
         self.domain = domain
@@ -37,6 +39,9 @@ class NumericEncoding(Encoding):
         self.hasEffectAxioms = hasEffectAxioms
         self.relaxGoal = relaxGoal
         self.subgoalsAchieved = subgoalsAchieved
+        self.additionalConstraints = additionalConstraints
+        self.supportRuleGrouping = supportRuleGrouping
+        self.additionalConstraintStats = {"support": 0, "resource": 0}
 
         self.transitionVariables: [NumericTransitionVariables] = list()
 
@@ -45,6 +50,8 @@ class NumericEncoding(Encoding):
         self.pattern = pattern
         if self.encoding == "binary":
             self.pattern.extendNonLinearities(binaryActions)
+        modes = AdditionalConstraintGenerator.getModes(additionalConstraints)
+        self.additionalConstraintIndex = PatternEffectIndex(self.pattern, modes)
 
         for index in range(0, bound + 1):
             var = NumericTransitionVariables(self.domain.predicates, self.domain.functions, self.domain.assList,
@@ -381,6 +388,11 @@ class NumericEncoding(Encoding):
         rules += self.getPreStepRules(stepVars)
         rules += self.getEffStepRules(stepVars)
         rules += self.getFrameStepRules(stepVars)
+        generator = AdditionalConstraintGenerator(
+            self.domain, self.problem, self.pattern, prevVars, stepVars, self.additionalConstraints,
+            patternIndex=self.additionalConstraintIndex, supportRuleGrouping=self.supportRuleGrouping)
+        rules += generator.generate()
+        self.additionalConstraintStats = generator.stats
 
         return rules
 

@@ -14,7 +14,7 @@ from src.smt.SMTSolver import SMTSolver
 class TestTPP(TestCase):
 
     def setUp(self) -> None:
-        self.domain: Domain = Domain.fromFile("../../files/numerical/ipc-2023/tpp/domain.pddl")
+        self.domain: Domain = Domain.fromFile("../../files/numerical/ipc-2023/tpp/domain_bottle.pddl")
         self.problem: Problem = Problem.fromFile("../../files/numerical/ipc-2023/tpp/instances/p02.pddl")
         self.gDomain: GroundedDomain = self.domain.ground(self.problem)
         self.horizon = 1

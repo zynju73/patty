@@ -14,6 +14,7 @@ from src.search.Search import Search
 from src.search.StepSearch import StepSearch
 from src.utils.Arguments import Arguments
 from src.utils.LogPrint import LogPrint, LogPrintLevel
+from src.utils.RandomSeed import configureRandomSeed, getPythonHashSeed
 from src.utils.TimeStat import TimeStat
 
 
@@ -33,6 +34,7 @@ class TeeOutput:
 
 def main():
     args = Arguments()
+    configureRandomSeed(args.seed)
     if args.isHelp:
         exit(0)
 
@@ -65,6 +67,8 @@ def run(args: Arguments):
         console: LogPrint = LogPrint(args.verboseLevel)
         ts: TimeStat = TimeStat()
         ts.start("Overall")
+        console.log(f"Seed: {args.seed}", LogPrintLevel.STATS)
+        console.log(f"PYTHONHASHSEED: {getPythonHashSeed()}", LogPrintLevel.STATS)
         domain: Domain = Domain.fromFile(args.domain)
         problem: Problem = Problem.fromFile(args.problem)
 

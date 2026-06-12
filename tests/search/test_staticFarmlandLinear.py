@@ -11,7 +11,7 @@ from src.utils.Arguments import Arguments
 class TestAStarFarmlandLinear(TestCase):
 
     def setUp(self) -> None:
-        domainFile = "../../files/numeric/ipc-2023/fo-farmland/domain.pddl"
+        domainFile = "../../files/numeric/ipc-2023/fo-farmland/domain_bottle.pddl"
         problemFile = "../../files/numeric/ipc-2023/fo-farmland/instances/instance_10_200_1229.pddl"
 
         self.domain: Domain = Domain.fromFile(domainFile)

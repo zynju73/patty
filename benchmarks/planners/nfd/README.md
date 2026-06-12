@@ -14,35 +14,35 @@ Then, run the script with the root privilege.
 ### Optimal LNP
 
 ```bash
-./run-opt-lnp-1 domain.pddl problem.pddl plan
+./run-opt-lnp-1 domain_bottle.pddl problem.pddl plan
 ```
 
 ```bash
-./run-opt-lnp-2 domain.pddl problem.pddl plan
+./run-opt-lnp-2 domain_bottle.pddl problem.pddl plan
 ```
 
 ### Optimal SNP
 
 ```bash
-./run-opt-snp-1 domain.pddl problem.pddl plan
+./run-opt-snp-1 domain_bottle.pddl problem.pddl plan
 ```
 
 ```bash
-./run-opt-snp-2 domain.pddl problem.pddl plan
+./run-opt-snp-2 domain_bottle.pddl problem.pddl plan
 ```
 
 ### Satisficing/Agile LNP
 
 ```bash
-./run-sat-lnp-1 domain.pddl problem.pddl plan
+./run-sat-lnp-1 domain_bottle.pddl problem.pddl plan
 ```
 
 ### Satisficing/Agile SNP
 
 ```bash
-./run-sat-snp-1 domain.pddl problem.pddl plan
+./run-sat-snp-1 domain_bottle.pddl problem.pddl plan
 ```
 
 ```bash
-./run-sat-snp-2 domain.pddl problem.pddl plan
+./run-sat-snp-2 domain_bottle.pddl problem.pddl plan
 ```

@@ -50,7 +50,9 @@ class AStarSearchMax(Search):
                     relaxGoal=True,
                     subgoalsAchieved=subgoalsAchieved,
                     constraints=self.args.temporalConstraints,
-                    bound=1)
+                    bound=1,
+                    additionalConstraints=self.args.additionalConstraints,
+                    supportRuleGrouping=self.args.supportRuleGrouping)
             else:
                 encoding: NumericEncoding = NumericEncoding(
                     domain=self.domain,
@@ -61,16 +63,22 @@ class AStarSearchMax(Search):
                     subgoalsAchieved=subgoalsAchieved,
                     encoding=self.args.encoding,
                     rollBound=self.args.rollBound,
-                    hasEffectAxioms=self.args.hasEffectAxioms
+                    hasEffectAxioms=self.args.hasEffectAxioms,
+                    additionalConstraints=self.args.additionalConstraints,
+                    supportRuleGrouping=self.args.supportRuleGrouping
                 )
             self.ts.end(f"Conversion to SMT at bound {bound}", console=self.console)
             self.console.log(f"Bound {bound} - Vars = {encoding.getNVars()}", LogPrintLevel.STATS)
             self.console.log(f"Bound {bound} - Rules = {encoding.getNRules()}", LogPrintLevel.STATS)
             self.console.log(f"Bound {bound} - Avg Rule Length = {encoding.getAvgRuleLength()}", LogPrintLevel.STATS)
             self.console.log(f"Bound {bound} - Pattern Length = {patF.getLength()}", LogPrintLevel.STATS)
+            if self.args.additionalConstraints:
+                stats = encoding.additionalConstraintStats
+                self.console.log(f"Additional Support Rules = {stats['support']}", LogPrintLevel.STATS)
+                self.console.log(f"Additional Resource Rules = {stats['resource']}", LogPrintLevel.STATS)
 
             self.ts.start(f"Solving Bound {bound}", console=self.console)
-            solver: SMTSolver = SMTSolver(encoding, maximize=True)
+            solver: SMTSolver = SMTSolver(encoding, maximize=True, seed=self.args.seed)
             callsToSolver += 1
             plan: Plan = solver.solve()
             solver.exit()

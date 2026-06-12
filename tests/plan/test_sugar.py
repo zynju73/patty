@@ -15,7 +15,7 @@ class TestSugar(TestCase):
 
     def setUp(self) -> None:
         a = time.perf_counter()
-        self.domain: Domain = Domain.fromFile("../../files/numerical/ipc-2023/sugar/domain.pddl")
+        self.domain: Domain = Domain.fromFile("../../files/numerical/ipc-2023/sugar/domain_bottle.pddl")
         b = time.perf_counter()
         self.problem: Problem = Problem.fromFile("../../files/numerical/ipc-2023/sugar/instances/pfile01.pddl")
         c = time.perf_counter()

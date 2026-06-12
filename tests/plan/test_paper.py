@@ -13,7 +13,7 @@ from src.smt.SMTSolver import SMTSolver
 class TestPaper(TestCase):
 
     def setUp(self) -> None:
-        self.domain: Domain = Domain.fromFile("../../files/paper-example/domain.pddl")
+        self.domain: Domain = Domain.fromFile("../../files/paper-example/domain_bottle.pddl")
         self.problem: Problem = Problem.fromFile("../../files/paper-example/problem.pddl")
         self.unreachable: Problem = Problem.fromFile("../../files/paper-example/unreachable.pddl")
         self.gDomain: GroundedDomain = self.domain.ground(self.problem)

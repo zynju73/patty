@@ -13,7 +13,7 @@ from src.smt.SMTSolver import SMTSolver
 class TestFarmlandLinear(TestCase):
 
     def setUp(self) -> None:
-        self.domain: Domain = Domain.fromFile("../../files/farmland_ln/domain.pddl")
+        self.domain: Domain = Domain.fromFile("../../files/farmland_ln/domain_bottle.pddl")
         self.problem: Problem = Problem.fromFile("../../files/farmland_ln/instances/instance_2_100_1229.pddl")
         self.gDomain: GroundedDomain = self.domain.ground(self.problem)
         self.horizon = 2

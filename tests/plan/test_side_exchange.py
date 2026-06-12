@@ -13,7 +13,7 @@ from src.smt.SMTSolver import SMTSolver
 class TestSideExchange(TestCase):
 
     def setUp(self) -> None:
-        self.domain: Domain = Domain.fromFile("../../files/side-exchange/domain.pddl")
+        self.domain: Domain = Domain.fromFile("../../files/side-exchange/domain_bottle.pddl")
         self.problem: Problem = Problem.fromFile("../../files/side-exchange/instances/1.pddl")
         self.gDomain: GroundedDomain = self.domain.ground(self.problem)
         self.horizon = 3

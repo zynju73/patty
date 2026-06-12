@@ -11,7 +11,7 @@ from src.utils.Arguments import Arguments
 class TestAStarDelivery(TestCase):
 
     def setUp(self) -> None:
-        domainFile = "../../files/numeric/ipc-2023/delivery/domain.pddl"
+        domainFile = "../../files/numeric/ipc-2023/delivery/domain_bottle.pddl"
         problemFile = "../../files/numeric/ipc-2023/delivery/instances/prob01.pddl"
 
         self.domain: Domain = Domain.fromFile(domainFile)

@@ -12,7 +12,7 @@ from src.utils.Arguments import Arguments
 class TestBigGroundingRover(TestCase):
 
     def setUp(self) -> None:
-        domainFile = "../../files/ipc-2023/rover/domain.pddl"
+        domainFile = "../../files/ipc-2023/rover/domain_bottle.pddl"
         problemFile = "../../files/ipc-2023/rover/instances/pfile15.pddl"
 
         self.domain: Domain = Domain.fromFile(domainFile)

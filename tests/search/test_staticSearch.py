@@ -11,7 +11,7 @@ from src.utils.Arguments import Arguments
 class TestStaticSearch(TestCase):
 
     def setUp(self) -> None:
-        domainFile = "../../files/numeric/ipc-2023/block-grouping/domain.pddl"
+        domainFile = "../../files/numeric/ipc-2023/block-grouping/domain_bottle.pddl"
         problemFile = "../../files/numeric/ipc-2023/block-grouping/instances/instance_7_10_2_1.pddl"
 
         self.domain: Domain = Domain.fromFile(domainFile)

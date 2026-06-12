@@ -17,6 +17,7 @@ from src.pddl.Problem import Problem
 from src.pddl.SnapAction import SnapAction
 from src.pddl.TemporalPlan import TemporalPlan
 from src.pddl.TimePredicate import TimePredicateType
+from src.plan.AdditionalConstraints import AdditionalConstraintGenerator, PatternEffectIndex
 from src.plan.Encoding import Encoding
 from src.plan.Pattern import Pattern
 from src.plan.TemporalTransitionVariables import TemporalTransitionVariables
@@ -35,7 +36,7 @@ class TemporalEncoding(Encoding):
     def __init__(self, domain: GroundedDomain, problem: Problem, pattern: Pattern, bound: int, epsilon=0.001,
                  constraints: str = "numerical", relaxGoal=False,
                  subgoalsAchieved: Set[Formula] = None,
-                 manualBottleConstraints: str = None):
+                 additionalConstraints: str = None, supportRuleGrouping="action"):
 
         super().__init__(domain, problem, pattern, bound)
         self.domain = domain
@@ -46,7 +47,11 @@ class TemporalEncoding(Encoding):
         self.constraints = constraints
         self.relaxGoal = relaxGoal
         self.subgoalsAchieved = subgoalsAchieved
-        self.manualBottleConstraints = manualBottleConstraints
+        self.additionalConstraints = additionalConstraints
+        self.supportRuleGrouping = supportRuleGrouping
+        self.additionalConstraintStats = {"support": 0, "resource": 0}
+        modes = AdditionalConstraintGenerator.getModes(additionalConstraints)
+        self.additionalConstraintIndex = PatternEffectIndex(pattern, modes)
 
         self.transitionVariables: [TemporalTransitionVariables] = list()
 
@@ -531,95 +536,6 @@ class TemporalEncoding(Encoding):
 
         return rules
 
-    def getManualBottleConstraintModes(self) -> Set[str]:
-        if not self.manualBottleConstraints:
-            return set()
-        if self.manualBottleConstraints == "all":
-            return {"support", "resource"}
-        return {self.manualBottleConstraints}
-
-    def collectBottleCounts(self, stepVars: TemporalTransitionVariables):
-        pourCounts: Dict[Tuple[str, str], List[SMTExpression]] = {}
-        uncapCounts: Dict[str, List[SMTExpression]] = {}
-
-        for i, action in enumerate(self.pattern):
-            if action.isFake or not isinstance(action, SnapAction) or action.timeType != TimePredicateType.AT_START:
-                continue
-
-            parts = action.durativeAction.name.split()
-            if len(parts) == 2 and parts[0] == "uncap-cap":
-                uncapCounts.setdefault(parts[1], []).append(stepVars.actionVariables[i])
-            elif len(parts) == 3 and parts[0] == "pour":
-                pourCounts.setdefault((parts[1], parts[2]), []).append(stepVars.actionVariables[i])
-
-        return pourCounts, uncapCounts
-
-    @staticmethod
-    def sumCounts(counts: List[SMTExpression]):
-        return sum(counts) if counts else 0
-
-    @staticmethod
-    def countPositive(counts: List[SMTExpression]) -> SMTExpression:
-        return (sum(counts) > 0) if counts else SMTExpression.FALSE()
-
-    def getInitialCappedBottles(self) -> Set[str]:
-        capped = set()
-        for assignment in self.problem.init:
-            if isinstance(assignment, Literal) and assignment.sign == "+":
-                atom = assignment.getAtom()
-                if atom.name == "capped" and atom.attributes:
-                    capped.add(atom.attributes[0])
-        return capped
-
-    def getInitialLitres(self) -> Dict[str, float]:
-        initialLitres: Dict[str, float] = {}
-        for assignment in self.problem.init:
-            if not isinstance(assignment, BinaryPredicate):
-                continue
-            atom = assignment.getAtom()
-            if atom.name == "litres" and atom.attributes and isinstance(assignment.rhs, Constant):
-                initialLitres[atom.attributes[0]] = float(assignment.rhs.value)
-        return initialLitres
-
-    @staticmethod
-    def bottleIndex(name: str) -> int:
-        return int(name[1:]) if name.startswith("b") and name[1:].isdigit() else 0
-
-    def getManualBottleRules(self, stepVars: TemporalTransitionVariables) -> List[SMTExpression]:
-        modes = self.getManualBottleConstraintModes()
-        if not modes or self.problem.domainName != "bottles":
-            return []
-
-        pourCounts, uncapCounts = self.collectBottleCounts(stepVars)
-        rules: List[SMTExpression] = []
-
-        if "support" in modes:
-            initiallyCapped = self.getInitialCappedBottles()
-            for (src, dst), counts in pourCounts.items():
-                antecedent = self.countPositive(counts)
-                supportRules = []
-                if src in initiallyCapped:
-                    supportRules.append(self.countPositive(uncapCounts.get(src, [])))
-                if dst in initiallyCapped:
-                    supportRules.append(self.countPositive(uncapCounts.get(dst, [])))
-                if supportRules:
-                    rules.append(antecedent.implies(SMTExpression.andOfExpressionsList(supportRules)))
-
-        if "resource" in modes:
-            initialLitres = self.getInitialLitres()
-            sources = sorted({src for src, _ in pourCounts}, key=self.bottleIndex)
-            for src in sources:
-                if src not in initialLitres:
-                    continue
-                outgoing = []
-                for (pourSrc, _), counts in pourCounts.items():
-                    if pourSrc == src:
-                        outgoing.extend(counts)
-                if outgoing:
-                    rules.append(self.sumCounts(outgoing) <= initialLitres[src])
-
-        return rules
-
     def getLastingActionsRules(self, stepVars: TemporalTransitionVariables) -> List[SMTExpression]:
         rules: [SMTExpression] = []
         for b in self.domain.durativeActions:
@@ -719,7 +635,12 @@ class TemporalEncoding(Encoding):
         rulesDict["eff"] = self.getEffStepRules(stepVars)
         rulesDict["amo"] = self.getAmoStepRules(stepVars)
         rulesDict["frame"] = self.getFrameStepRules(stepVars)
-        rulesDict["manual-bottle"] = self.getManualBottleRules(stepVars)
+        generator = AdditionalConstraintGenerator(
+            self.domain, self.problem, self.pattern, prevVars, stepVars, self.additionalConstraints,
+            actionVariablesByIndex=True, patternIndex=self.additionalConstraintIndex,
+            supportRuleGrouping=self.supportRuleGrouping)
+        rulesDict["additional"] = generator.generate()
+        self.additionalConstraintStats = generator.stats
         # Pattern Time Encoding
         rulesDict["dur"] = self.getDurationRules(stepVars)
         if self.constraints == "logical":

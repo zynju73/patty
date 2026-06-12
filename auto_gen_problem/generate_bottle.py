@@ -61,7 +61,7 @@ def generate_problem(num_bottles: int,
     # 瓶子命名：b1, b2, ..., bN
     bottles = [f"b{i+1}" for i in range(num_bottles)]
 
-    # 按 domain.pddl 中的类型层次：
+    # 按 domain_bottle.pddl 中的类型层次：
     #   bottleleft, bottleright - bottle
     # 这里简单地前一半当作 bottleleft，后一半当作 bottleright
     half = max(1, num_bottles // 2)

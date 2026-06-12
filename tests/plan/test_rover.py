@@ -15,7 +15,7 @@ class TestRover(TestCase):
 
     def setUp(self) -> None:
         a = time.perf_counter()
-        self.domain: Domain = Domain.fromFile("../../files/rover/domain.pddl")
+        self.domain: Domain = Domain.fromFile("../../files/rover/domain_bottle.pddl")
         b = time.perf_counter()
         self.problem: Problem = Problem.fromFile("../../files/rover/instances/pfile1.pddl")
         c = time.perf_counter()

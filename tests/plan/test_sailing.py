@@ -14,7 +14,7 @@ from src.smt.SMTSolver import SMTSolver
 class TestSailing(TestCase):
 
     def setUp(self) -> None:
-        self.domainFile = "../../files/sailing/domain.pddl"
+        self.domainFile = "../../files/sailing/domain_bottle.pddl"
         self.problemFile = "../../files/sailing/instances/instance_1_2_1229.pddl"
         self.domain: Domain = Domain.fromFile(self.domainFile)
         self.problem: Problem = Problem.fromFile(self.problemFile)

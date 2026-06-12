@@ -11,13 +11,15 @@ from src.plan.NumericEncoding import NumericEncoding
 from src.smt.SMTExpression import SMTExpression
 from src.smt.SMTSolution import SMTSolution
 from src.smt.SMTVariable import SMTVariable
+from src.utils.RandomSeed import DEFAULT_SEED, configureRandomSeed
 
 
 class SMTSolver:
     solver: Portfolio
     variables: Set[SMTVariable]
 
-    def __init__(self, encoding: Encoding = None, maximize=False):
+    def __init__(self, encoding: Encoding = None, maximize=False, seed=DEFAULT_SEED):
+        configureRandomSeed(seed)
         self.variables: Set[SMTVariable] = set()
         self.variablesByName: Dict[str, SMTVariable] = dict()
         self.assertions: List[SMTExpression] = list()
@@ -30,12 +32,14 @@ class SMTSolver:
             self.z3: Solver = Solver("z3",
                                      logic=QF_LRA,
                                      incremental=True,
-                                     generate_models=True)
+                                     generate_models=True,
+                                     random_seed=seed)
         else:
             self.solver: Portfolio = Portfolio(["z3"],
                                                logic=QF_NRA,
                                                incremental=True,
-                                               generate_models=True)
+                                               generate_models=True,
+                                               solver_options={"random_seed": seed})
 
         if self.encoding:
             self.addAssertions(self.encoding.rules)

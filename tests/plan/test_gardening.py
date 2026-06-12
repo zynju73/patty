@@ -12,7 +12,7 @@ from src.smt.SMTSolver import SMTSolver
 class TestGardening(TestCase):
 
     def setUp(self) -> None:
-        self.domain: Domain = Domain.fromFile("../../files/gardening/domain.pddl")
+        self.domain: Domain = Domain.fromFile("../../files/gardening/domain_bottle.pddl")
         self.problem: Problem = Problem.fromFile("../../files/gardening/instances/instance_7_1_2.pddl")
         self.gDomain: GroundedDomain = self.domain.ground(self.problem)
         self.horizon = 3

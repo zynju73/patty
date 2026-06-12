@@ -13,7 +13,7 @@ from src.utils.Arguments import Arguments
 class TestStaticSearch(TestCase):
 
     def setUp(self) -> None:
-        domainFile = "../../files/temporal/paper-example/domain.pddl"
+        domainFile = "../../files/temporal/paper-example/domain_bottle.pddl"
         problemFile = "../../files/temporal/paper-example/instances/p2.pddl"
 
         self.domain: Domain = Domain.fromFile(domainFile)

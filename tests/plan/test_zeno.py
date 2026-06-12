@@ -14,7 +14,7 @@ from src.smt.SMTSolver import SMTSolver
 class TestZeno(TestCase):
 
     def setUp(self) -> None:
-        self.domain: Domain = Domain.fromFile("../../files/zeno-travel/domain.pddl")
+        self.domain: Domain = Domain.fromFile("../../files/zeno-travel/domain_bottle.pddl")
         self.problem: Problem = Problem.fromFile("../../files/zeno-travel/instances/pfile1.pddl")
         self.gDomain: GroundedDomain = self.domain.ground(self.problem)
         self.horizon = 5

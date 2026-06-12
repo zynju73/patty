@@ -15,7 +15,7 @@ class TestLogistic(TestCase):
 
     def setUp(self) -> None:
         a = time.perf_counter()
-        self.domain: Domain = Domain.fromFile("../../files/classical/logistic/domain.pddl")
+        self.domain: Domain = Domain.fromFile("../../files/classical/logistic/domain_bottle.pddl")
         b = time.perf_counter()
         self.problem: Problem = Problem.fromFile("../../files/classical/logistic/instances/probLOGISTICS-4-0.pddl")
         c = time.perf_counter()

@@ -237,6 +237,9 @@ class GroundedDomain(Domain):
     addList: Dict[Atom, Set[Operation]]
     delList: Dict[Atom, Set[Operation]]
     assList: Dict[Atom, Set[Operation]]
+    increaseList: Dict[Atom, Set[Operation]]
+    decreaseList: Dict[Atom, Set[Operation]]
+    influencedBy: Dict[Atom, Set[Operation]]
 
     def __init__(self, name: str, actions: Set[Action], events: Set[Event], process: Set[Process],
                  durativeActions: Set[DurativeAction], affectedGraph=None):
@@ -265,6 +268,9 @@ class GroundedDomain(Domain):
         self.addList: Dict[Atom, Set[Operation]] = dict()
         self.delList: Dict[Atom, Set[Operation]] = dict()
         self.assList: Dict[Atom, Set[Operation]] = dict()
+        self.increaseList: Dict[Atom, Set[Operation]] = dict()
+        self.decreaseList: Dict[Atom, Set[Operation]] = dict()
+        self.influencedBy: Dict[Atom, Set[Operation]] = dict()
         self.arpg = None
 
     def computeLists(self):
@@ -291,6 +297,15 @@ class GroundedDomain(Domain):
             for v in op.getAssList():
                 self.assList.setdefault(v, set())
                 self.assList[v].add(op)
+            for v in op.getIncrList():
+                self.increaseList.setdefault(v, set())
+                self.increaseList[v].add(op)
+            for v in op.getDecrList():
+                self.decreaseList.setdefault(v, set())
+                self.decreaseList[v].add(op)
+            for v in op.getInfluencedAtoms():
+                self.influencedBy.setdefault(v, set())
+                self.influencedBy[v].add(op)
 
             pass
 

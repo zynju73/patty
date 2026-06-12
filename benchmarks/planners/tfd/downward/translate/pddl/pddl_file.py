@@ -24,7 +24,7 @@ def pddl_open(task_filename=None, domain_filename=None):
     if task_filename is None:
         if len(sys.argv) not in (2, 3):
             raise SystemExit("Error: Need exactly one or two command line arguments.\n"
-                             "Usage: %s [<domain.pddl>] <task.pddl>" % sys.argv[0])
+                             "Usage: %s [<domain_bottle.pddl>] <task.pddl>" % sys.argv[0])
 
         task_filename = sys.argv[-1]
         if len(sys.argv) == 3:
@@ -32,11 +32,11 @@ def pddl_open(task_filename=None, domain_filename=None):
 
     if not domain_filename:
         dirname, basename = os.path.split(task_filename)
-        domain_filename = os.path.join(dirname, "domain.pddl")
+        domain_filename = os.path.join(dirname, "domain_bottle.pddl")
         if not os.path.exists(domain_filename) and re.match(r"p[0-9][0-9]\b", basename):
-            domain_filename = os.path.join(dirname, basename[:4] + "domain.pddl")
+            domain_filename = os.path.join(dirname, basename[:4] + "domain_bottle.pddl")
         if not os.path.exists(domain_filename) and re.match(r"p[0-9][0-9]\b", basename):
-            domain_filename = os.path.join(dirname, basename[:3] + "-domain.pddl")
+            domain_filename = os.path.join(dirname, basename[:3] + "-domain_bottle.pddl")
         if not os.path.exists(domain_filename):
             raise SystemExit("Error: Could not find domain file using "
                              "automatic naming rules.")
