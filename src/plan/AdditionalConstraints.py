@@ -1,9 +1,10 @@
 from typing import Dict, List, Set, Tuple
 
 from src.pddl.Atom import Atom
-from src.pddl.BinaryPredicate import BinaryPredicate
+from src.pddl.BinaryPredicate import BinaryPredicate, BinaryPredicateType
 from src.pddl.Constant import Constant
 from src.pddl.Domain import GroundedDomain
+from src.pddl.Formula import Formula
 from src.pddl.Literal import Literal
 from src.pddl.Predicate import Predicate
 from src.pddl.Problem import Problem
@@ -35,7 +36,7 @@ class PatternEffectIndex:
                 for atom in action.getDelList():
                     self.deletes.setdefault(atom, []).append(i)
 
-            if "resource" in modes:
+            if modes.intersection({"resource", "overshoot"}):
                 for atom, amount in action.getIncreases().items():
                     self.increases.setdefault(atom, []).append((i, amount))
                 for atom, amount in action.getDecreases().items():
@@ -60,7 +61,7 @@ class AdditionalConstraintGenerator:
         self.actionVariablesByIndex = actionVariablesByIndex
         self.supportRuleGrouping = supportRuleGrouping
         self.modes = self.getModes(mode)
-        self.stats = {"support": 0, "resource": 0}
+        self.stats = {"support": 0, "resource": 0, "overshoot": 0}
         self.patternIndex = patternIndex or PatternEffectIndex(pattern, self.modes)
 
     @staticmethod
@@ -68,6 +69,8 @@ class AdditionalConstraintGenerator:
         if not mode:
             return set()
         if mode == "all":
+            return {"support", "resource", "overshoot"}
+        if mode == "support-resource":
             return {"support", "resource"}
         return {mode}
 
@@ -85,6 +88,10 @@ class AdditionalConstraintGenerator:
             resourceRules = self.__getResourceRules()
             self.stats["resource"] = len(resourceRules)
             rules.extend(resourceRules)
+        if "overshoot" in self.modes:
+            overshootRules = self.__getOvershootRules()
+            self.stats["overshoot"] = len(overshootRules)
+            rules.extend(overshootRules)
         return rules
 
     def __getSupportRules(self) -> List[SMTExpression]:
@@ -224,5 +231,68 @@ class AdditionalConstraintGenerator:
             totalConsumption = sum(self.__getActionVariable(i) * amount for i, amount in consumers)
             totalProduction = sum(self.__getActionVariable(i) * amount for i, amount in producers)
             rules.append(totalConsumption <= self.prevVars.valueVariables[atom] + totalProduction)
+
+        return rules
+
+    def __getExactNumericGoals(self, formula: Formula) -> Dict[Atom, float]:
+        goals = {}
+        if formula.type != "AND":
+            return goals
+
+        for condition in formula.conditions:
+            if isinstance(condition, Formula):
+                goals.update(self.__getExactNumericGoals(condition))
+                continue
+            if not isinstance(condition, BinaryPredicate) \
+                    or condition.type != BinaryPredicateType.COMPARATION \
+                    or condition.operator != "=":
+                continue
+
+            if isinstance(condition.lhs, Literal) and isinstance(condition.rhs, Constant):
+                goals[condition.lhs.getAtom()] = float(condition.rhs.value)
+            elif isinstance(condition.lhs, Constant) and isinstance(condition.rhs, Literal):
+                goals[condition.rhs.getAtom()] = float(condition.lhs.value)
+
+        return goals
+
+    def __getConstantPositiveEffects(self, atom: Atom, actions, getEffects):
+        effects = []
+        for action in actions:
+            amount = getEffects(action).get(atom)
+            if not isinstance(amount, Constant) or amount.value <= 0:
+                return None
+            effects.append(float(amount.value))
+        return effects
+
+    def __getOvershootRules(self) -> List[SMTExpression]:
+        rules = []
+
+        for atom, target in self.__getExactNumericGoals(self.problem.goal).items():
+            modifiers = self.domain.influencedBy.get(atom, set())
+            increases = self.domain.increaseList.get(atom, set())
+            decreases = self.domain.decreaseList.get(atom, set())
+
+            if not modifiers or self.domain.assList.get(atom):
+                continue
+
+            if modifiers == increases and not decreases:
+                if self.__getConstantPositiveEffects(atom, increases, lambda action: action.getIncreases()) is None:
+                    continue
+                indexedEffects = self.patternIndex.increases.get(atom, [])
+                if any(not isinstance(amount, Constant) or amount.value <= 0 for _, amount in indexedEffects):
+                    continue
+                totalChange = sum(
+                    self.__getActionVariable(i) * float(amount.value) for i, amount in indexedEffects)
+                rules.append(self.prevVars.valueVariables[atom] + totalChange <= target)
+
+            elif modifiers == decreases and not increases:
+                if self.__getConstantPositiveEffects(atom, decreases, lambda action: action.getDecreases()) is None:
+                    continue
+                indexedEffects = self.patternIndex.decreases.get(atom, [])
+                if any(not isinstance(amount, Constant) or amount.value <= 0 for _, amount in indexedEffects):
+                    continue
+                totalChange = sum(
+                    self.__getActionVariable(i) * float(amount.value) for i, amount in indexedEffects)
+                rules.append(self.prevVars.valueVariables[atom] - totalChange >= target)
 
         return rules

@@ -81,6 +81,7 @@ class ChainSearch(Search):
                 stats = encoding.additionalConstraintStats
                 self.console.log(f"Additional Support Rules = {stats['support']}", LogPrintLevel.STATS)
                 self.console.log(f"Additional Resource Rules = {stats['resource']}", LogPrintLevel.STATS)
+                self.console.log(f"Additional Overshoot Rules = {stats['overshoot']}", LogPrintLevel.STATS)
             self.console.log(f"Calls to Solver: {callsToSolver}", LogPrintLevel.STATS)
             self.ts.start(f"Solving Bound {bound}", console=self.console)
             solver: SMTSolver = SMTSolver(encoding, maximize=self.args.maximize, seed=self.args.seed)

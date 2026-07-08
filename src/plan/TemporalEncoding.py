@@ -49,7 +49,7 @@ class TemporalEncoding(Encoding):
         self.subgoalsAchieved = subgoalsAchieved
         self.additionalConstraints = additionalConstraints
         self.supportRuleGrouping = supportRuleGrouping
-        self.additionalConstraintStats = {"support": 0, "resource": 0}
+        self.additionalConstraintStats = {"support": 0, "resource": 0, "overshoot": 0}
         modes = AdditionalConstraintGenerator.getModes(additionalConstraints)
         self.additionalConstraintIndex = PatternEffectIndex(pattern, modes)
 
@@ -701,7 +701,7 @@ class TemporalEncoding(Encoding):
         x = PrettyTable()
         x.field_names = ["i", "Action", "a_i", "t_i", "d_i"]
         for i, action in enumerate(self.pattern):
-            a_i = int(str(solution.getVariable(stepVar.actionVariables[i])))
+            a_i = int(solution.getVariable(stepVar.actionVariables[i]))
             t_i = solution.getVariable(stepVar.timeVariables[i])
             d_i = solution.getVariable(stepVar.durVariables[i]) if i in stepVar.durVariables else 0.0
 
@@ -712,7 +712,7 @@ class TemporalEncoding(Encoding):
         pairs: List[Tuple[SnapAction, SnapAction]] = list()
         for i, action in enumerate(self.pattern):
 
-            a_i = int(str(solution.getVariable(stepVar.actionVariables[i])))
+            a_i = int(solution.getVariable(stepVar.actionVariables[i]))
             t_i = solution.getVariable(stepVar.timeVariables[i])
 
             if a_i == 0:
@@ -740,8 +740,8 @@ class TemporalEncoding(Encoding):
             j = self.action2index[end]
 
             b = start.durativeAction
-            a_i = int(str(solution.getVariable(stepVar.actionVariables[i])))
-            a_j = int(str(solution.getVariable(stepVar.actionVariables[j])))
+            a_i = int(solution.getVariable(stepVar.actionVariables[i]))
+            a_j = int(solution.getVariable(stepVar.actionVariables[j]))
             t_i = solution.getVariable(stepVar.timeVariables[i])
             t_j = solution.getVariable(stepVar.timeVariables[j])
             d_i = solution.getVariable(stepVar.durVariables[i])

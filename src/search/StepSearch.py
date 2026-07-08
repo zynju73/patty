@@ -76,6 +76,7 @@ class StepSearch(Search):
                 stats = pddl2smt.additionalConstraintStats
                 self.console.log(f"Additional Support Rules = {stats['support']}", LogPrintLevel.STATS)
                 self.console.log(f"Additional Resource Rules = {stats['resource']}", LogPrintLevel.STATS)
+                self.console.log(f"Additional Overshoot Rules = {stats['overshoot']}", LogPrintLevel.STATS)
             self.console.log(f"Calls to Solver: {callsToSolver}", LogPrintLevel.STATS)
 
             if self.args.saveSMT:

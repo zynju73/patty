@@ -1,5 +1,5 @@
 from pysmt.logics import QF_LRA, QF_NRA
-from pysmt.shortcuts import Portfolio, write_smtlib, Solver
+from pysmt.shortcuts import write_smtlib, Solver
 from typing import Set, List, Dict
 
 from z3 import Optimize, z3
@@ -15,7 +15,6 @@ from src.utils.RandomSeed import DEFAULT_SEED, configureRandomSeed
 
 
 class SMTSolver:
-    solver: Portfolio
     variables: Set[SMTVariable]
 
     def __init__(self, encoding: Encoding = None, maximize=False, seed=DEFAULT_SEED):
@@ -35,11 +34,11 @@ class SMTSolver:
                                      generate_models=True,
                                      random_seed=seed)
         else:
-            self.solver: Portfolio = Portfolio(["z3"],
-                                               logic=QF_NRA,
-                                               incremental=True,
-                                               generate_models=True,
-                                               solver_options={"random_seed": seed})
+            self.solver = Solver("z3",
+                                 logic=QF_NRA,
+                                 incremental=True,
+                                 generate_models=True,
+                                 random_seed=seed)
 
         if self.encoding:
             self.addAssertions(self.encoding.rules)

@@ -76,6 +76,7 @@ class AStarSearchMax(Search):
                 stats = encoding.additionalConstraintStats
                 self.console.log(f"Additional Support Rules = {stats['support']}", LogPrintLevel.STATS)
                 self.console.log(f"Additional Resource Rules = {stats['resource']}", LogPrintLevel.STATS)
+                self.console.log(f"Additional Overshoot Rules = {stats['overshoot']}", LogPrintLevel.STATS)
 
             self.ts.start(f"Solving Bound {bound}", console=self.console)
             solver: SMTSolver = SMTSolver(encoding, maximize=True, seed=self.args.seed)

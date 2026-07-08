@@ -50,9 +50,10 @@ class Arguments:
                             action="store_true", default=False)
         parser.add_argument('--temporal-constraints', help="'numerical' or 'logical' following IJCAI-24",
                             default='numerical')
-        parser.add_argument('--additional-constraints', choices=["support", "resource", "all"],
+        parser.add_argument('--additional-constraints',
+                            choices=["support", "resource", "support-resource", "overshoot", "all"],
                             help="Generate domain-independent necessary constraints before solving")
-        parser.add_argument('--support-rule-grouping', choices=["precondition", "action"], default="action",
+        parser.add_argument('--support-rule-grouping', choices=["precondition", "action"], default="precondition",
                             help="Generate one support rule per precondition or per action")
         parser.add_argument('--manual-bottle-constraints', choices=["support", "resource", "all"],
                             help="Deprecated alias for --additional-constraints")

@@ -41,7 +41,7 @@ class NumericEncoding(Encoding):
         self.subgoalsAchieved = subgoalsAchieved
         self.additionalConstraints = additionalConstraints
         self.supportRuleGrouping = supportRuleGrouping
-        self.additionalConstraintStats = {"support": 0, "resource": 0}
+        self.additionalConstraintStats = {"support": 0, "resource": 0, "overshoot": 0}
 
         self.transitionVariables: [NumericTransitionVariables] = list()
 
@@ -407,7 +407,7 @@ class NumericEncoding(Encoding):
             for a in self.pattern:
                 if a.isFake:
                     continue
-                repetitions = int(str(solution.getVariable(stepVar.actionVariables[a]))) * a.linearizationTimes
+                repetitions = int(solution.getVariable(stepVar.actionVariables[a])) * a.linearizationTimes
                 if repetitions > 0:
                     plan.addRepeatedAction(a.linearizationOf, repetitions)
 
